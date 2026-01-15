@@ -1,24 +1,65 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { colors } from "@/constants/theme";
+import { iniatilizeDatabase } from "@/db/init";
+import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+export default function RootLayout(){
+  const[dbReady,setDbReady] = useState(false)
+  const[error,setError] = useState<string | null>(null)
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+  useEffect(()=>{
+    try {
+      iniatilizeDatabase()
+      setDbReady(true) 
+    } catch (error:any) {
+      setError(error.message)
+      console.error('Database Initialization FAILED',error)      
+    }
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  },[])
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+  if(error){
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.errorText}>Database Error</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
+      </View>
+    )
+  }
+
+  if(!dbReady){
+    return(
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size={'large'} color={colors.primary}/>
+        <Text style={styles.loadingText}>Initializing...</Text>
+      </View>
+    )
+  }
+
+  return(
+    <Stack screenOptions={{headerShown:false}}>
+      <Stack.Screen name="(tabs)"/>
+      <Stack.Screen 
+      name="details/[type]/[id]"
+      options={{presentation:'card'}}/>
+      <Stack.Screen name="player" options={{presentation:'fullScreenModal'}}/>
+
+    </Stack>
+  )
 }
+
+const styles = StyleSheet.create({
+  centerContainer:{
+
+  },
+  errorText:{
+
+  },
+  errorMessage:{
+
+  },
+  loadingText:{
+
+  }
+})

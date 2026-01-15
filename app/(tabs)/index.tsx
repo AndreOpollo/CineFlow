@@ -1,98 +1,140 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import EmptyState from "@/components/EmptyState";
+import HeroCarousel from "@/components/HeroCarousel";
+import HorizontalShelf from "@/components/HorizontalShelf";
+import { SkeletonShelf } from "@/components/SkeletonLoader";
+import { colors, spacing } from "@/constants/theme";
+import { LatestMovie, LatestTvShow, TrendingMovie } from "@/db/schema";
+import { ContentService } from "@/services/content";
+import { DatabaseService } from "@/services/database";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function HomeScreen(){
+  const[trending,setTrending] = useState<TrendingMovie[]>([])
+  const[latestMovies,setLatestMovies] = useState<LatestMovie[]>([])
+  const[latestTvShows,setLatestTvShows]=useState<LatestTvShow[]>([])
+  const[loading,setLoading] = useState(true)
+  const[refreshing,setRefreshing] = useState(false)
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
+  useEffect(()=>{
+      loadContent()
+  },[])
+
+  async function loadContent(){
+    try {
+      const cachedTrending = DatabaseService.getTrending()
+      const cachedMovies = DatabaseService.getLatestMovies()
+      const cachedTvShows = DatabaseService.getLatestTvShows()
+
+      setTrending(cachedTrending)
+      setLatestMovies(cachedMovies)
+      setLatestTvShows(cachedTvShows)
+      setLoading(false)
+
+      await ContentService.smartRefresh()
+
+      setTrending(DatabaseService.getTrending())
+      setLatestMovies(DatabaseService.getLatestMovies())
+      setLatestTvShows(DatabaseService.getLatestTvShows())
+
+    } catch (error) {
+      console.error('Error loading content',error)
+      setLoading(false)
+      
+    }
+  }
+
+  async function onRefresh(){
+    setRefreshing(true)
+    try {
+      await ContentService.refreshHomeContent()
+
+      setTrending(DatabaseService.getTrending())
+      setLatestMovies(DatabaseService.getLatestMovies())
+      setLatestTvShows(DatabaseService.getLatestTvShows())
+      
+    } catch (error) {
+      console.error('Refresh failed:',error)
+      
+    }finally{
+      setRefreshing(false)
+
+    }
+  }
+
+  const showLoading = loading && trending.length === 0
+
+  const isEmpty = !loading && !refreshing && trending.length === 0  && latestMovies.length ===0 && latestTvShows.length === 0
+
+  return(
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar style={"light"}/>
+      {isEmpty ? (
+        <EmptyState title={"No Content Available"} message={"Pull down to refresh and load content"}/>
+      ):(
+        <ScrollView 
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl
+          refreshing = {refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+          />
+        }>
+          {showLoading?(
+              <View style={styles.heroSkeleton}/>
+          ):trending.length>0?(
+              <HeroCarousel movies={trending}/>
+          ):null}
+
+          {showLoading ? (
+            <SkeletonShelf />
+          ) : (
+            latestMovies.length > 0 && (
+              <HorizontalShelf
+                title="Latest Movies"
+                items={latestMovies}
+                type="movie"
               />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+            )
+          )}
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+          {showLoading ? (
+            <SkeletonShelf />
+          ) : (
+            latestTvShows.length > 0 && (
+              <HorizontalShelf
+                title="Latest TV Shows"
+                items={latestTvShows}
+                type="tv"
+              />
+            )
+          )}
+          <View style={styles.bottomSpacer}/>
+        </ScrollView>
+      )}
+    </SafeAreaView>
+  )
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container:{
+    flex:1,
+    backgroundColor:colors.background
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  scrollView:{
+    flex:1
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  heroSkeleton:{
+    width:'100%',
+    height:400,
+    backgroundColor:colors.surfaceLight,
+    marginBottom:spacing.lg
   },
-});
+  bottomSpacer:{
+    height:spacing.xl
+  }
+})
