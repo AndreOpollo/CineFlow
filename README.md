@@ -278,14 +278,11 @@ eas build --platform all
 ## 📱 Screenshots
 
 
-<img width="300" alt="Screenshot_20251004_190931" src="https://github.com/user-attachments/assets/46e249d8-e335-4c3f-b840-1ebd657b802d" />
-<img width="300" alt="Screenshot_20251004_191134" src="https://github.com/user-attachments/assets/80241c61-75d9-4a4c-9008-c9ea4feda0f1" />
 <img width="300" alt="Screenshot_20260119_092931" src="https://github.com/user-attachments/assets/f4792750-9aab-4c75-896f-6e7f2ff68313" />
 <img width="300" alt="Screenshot_20260119_092955" src="https://github.com/user-attachments/assets/04593040-9f31-412a-983e-fed440d90be9" />
 <img width="300" alt="Screenshot_20260119_093106" src="https://github.com/user-attachments/assets/620d00df-fb4b-4b14-9dcb-bcd6c25cf718" />
 <img width="300" alt="Screenshot_20260119_093154" src="https://github.com/user-attachments/assets/1d1f8fbe-5cad-4e5c-b674-fe7b38034270" />
-
-
+<img width="300" alt="Screenshot_20260119_093535" src="https://github.com/user-attachments/assets/dd0008e3-acda-4a27-a6d2-1a2e2b5ace94" />
 
 
 
