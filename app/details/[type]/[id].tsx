@@ -8,7 +8,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, Calendar, Check, Clock, Play, Plus, Star } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Dimensions, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from 'react-native-webview';
 
@@ -34,20 +34,6 @@ export default function DetailsScreen(){
 
     },[id,type])
 
-    useEffect(()=>{
-        if(content && getTrailerKey()){
-            trailerTimeoutRef.current = setTimeout(()=>{
-                setShowTrailer(true)
-            },2000)
-        }
-
-        return ()=>{
-            if(trailerTimeoutRef.current){
-                clearTimeout(trailerTimeoutRef.current)
-            }
-        }
-
-    },[content])
 
     async function loadContent(){
         try {
@@ -90,6 +76,13 @@ export default function DetailsScreen(){
                 video.key
         )
         return trailer?.key || null
+    }
+
+    function handleTrailerPress(){
+        const trailerKey = getTrailerKey()
+        if(trailerKey){
+            Linking.openURL(`https://www.youtube.com/watch?v=${trailerKey}`)
+        }
     }
 
     function toggleWatchlist(){
@@ -187,6 +180,18 @@ export default function DetailsScreen(){
                         ]}
                         style={styles.gradient}
                     />
+                    {trailerKey && (
+                            <TouchableOpacity
+                            style={styles.trailerButton}
+                            onPress={handleTrailerPress}
+                            activeOpacity={0.8}
+                            >
+                            <View style={styles.trailerButtonInner}>
+                                <Play size={28} color={colors.text} fill={colors.text} />
+                            </View>
+                            <Text style={styles.trailerButtonText}>Watch Trailer</Text>
+                            </TouchableOpacity>
+                        )}
                     <TouchableOpacity 
                     style={styles.backButton}
                     onPress={()=>router.back()}
@@ -595,5 +600,32 @@ const styles = StyleSheet.create({
     },
     bottomSpacer: {
         height: spacing.xl,
+    },
+    trailerButton: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        },
+trailerButtonInner: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: colors.overlay,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 3,
+        borderColor: colors.text,
+        },
+trailerButtonText: {
+    color: colors.text,
+    fontSize: typography.caption.fontSize,
+    fontWeight: '600',
+    textShadowColor: colors.background,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
     },
 })
